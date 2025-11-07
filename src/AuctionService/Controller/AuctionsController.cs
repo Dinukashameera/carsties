@@ -84,8 +84,14 @@ public class AuctionsController : ControllerBase
         auction.Item.Mileage = updateAuctionDto.Mileage ?? auction.Item.Mileage;
         auction.Item.Year = updateAuctionDto.Year ?? auction.Item.Year;
 
+        // publishing updates auction to the message bus
+        var updatedAuction = _mapper.Map<AuctionUpdated>(auction);
+        await _publishEndpoint.Publish(updatedAuction);
+
         var result = await _contex.SaveChangesAsync() > 0;
+
         if (result) return Ok();
+
         return BadRequest("Problem saving cahanges");
     }
     [HttpDelete("{id}")]
@@ -95,6 +101,9 @@ public class AuctionsController : ControllerBase
         if (auction == null) return NotFound();
 
         _contex.Auctions.Remove(auction);
+
+        // publishing deleted auction id to the message bus
+        await _publishEndpoint.Publish<AuctionDeleted>(new { id = auction.Id.ToString() });
 
         var result = await _contex.SaveChangesAsync() > 0;
         if (!result) return BadRequest("could not update DB");

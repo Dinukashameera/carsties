@@ -29,6 +29,8 @@ builder.Services.AddMassTransit(x =>
         {
             e.UseMessageRetry(r => r.Interval(5, 5));
             e.ConfigureConsumer<AuctionCreatedConsumer>(context);
+            e.ConfigureConsumer<AuctionUpdatedConsumer>(context);
+            e.ConfigureConsumer<AuctionDeletedConsumer>(context);
         });
         cfg.ConfigureEndpoints(context);
     });
